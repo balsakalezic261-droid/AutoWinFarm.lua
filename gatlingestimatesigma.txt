@@ -1,254 +1,675 @@
+--// TDS HUB
+--// Main > Auto DJ
+
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
 local Players = game:GetService("Players")
-local player = Players.LocalPlayer
 
-local TARGET_LEVEL = 175
-local TARGET_COINS = 35000
+local Player = Players.LocalPlayer
 
-local BASE_XP_PER_HOUR = 100
-local VIP_PLUS_XP = 1.75
+getgenv().AutoDJ = false
+local AutoDJ = nil
 
-local BASE_COINS_PER_HOUR = 2500
-local VIP_PLUS_COINS = 1.20
+--==================================================
+-- GUI
+--==================================================
 
-local XP_PER_HOUR = BASE_XP_PER_HOUR * VIP_PLUS_XP
-local COINS_PER_HOUR = BASE_COINS_PER_HOUR * VIP_PLUS_COINS
+local Gui = Instance.new("ScreenGui")
+Gui.Name = "TDSHub"
+Gui.ResetOnSpawn = false
+Gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
+pcall(function()
+    Gui.Parent = game:GetService("CoreGui")
+end)
 
-local function findAttribute(names)
-    for _, name in ipairs(names) do
-        local value = player:GetAttribute(name)
-        if typeof(value) == "number" then
-            return value
-        end
-    end
-
-    for _, object in ipairs(player:GetDescendants()) do
-        for _, name in ipairs(names) do
-            local value = object:GetAttribute(name)
-
-            if typeof(value) == "number" then
-                return value
-            end
-        end
-    end
-
-    return nil
+if not Gui.Parent then
+    Gui.Parent = Player:WaitForChild("PlayerGui")
 end
 
-local function getLevel()
-    return findAttribute({
-        "Level", "level",
-        "Lvl", "lvl"
-    })
+local Window = Instance.new("Frame")
+Window.Size = UDim2.fromOffset(620, 390)
+Window.Position = UDim2.new(0.5, -310, 0.5, -195)
+Window.BackgroundColor3 = Color3.fromRGB(18, 18, 25)
+Window.BorderSizePixel = 0
+Window.Parent = Gui
+
+Instance.new("UICorner", Window).CornerRadius = UDim.new(0, 10)
+
+local Border = Instance.new("UIStroke", Window)
+Border.Color = Color3.fromRGB(47, 47, 62)
+Border.Thickness = 1
+
+--==================================================
+-- Header
+--==================================================
+
+local Header = Instance.new("Frame")
+Header.Size = UDim2.new(1, 0, 0, 70)
+Header.BackgroundColor3 = Color3.fromRGB(23, 23, 32)
+Header.BorderSizePixel = 0
+Header.Parent = Window
+
+Instance.new("UICorner", Header).CornerRadius = UDim.new(0, 10)
+
+local Title = Instance.new("TextLabel")
+Title.BackgroundTransparency = 1
+Title.Position = UDim2.fromOffset(20, 11)
+Title.Size = UDim2.fromOffset(350, 27)
+Title.Font = Enum.Font.GothamBold
+Title.Text = "TDS Hub"
+Title.TextSize = 20
+Title.TextColor3 = Color3.fromRGB(240, 240, 245)
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Parent = Header
+
+local SubTitle = Instance.new("TextLabel")
+SubTitle.BackgroundTransparency = 1
+SubTitle.Position = UDim2.fromOffset(21, 39)
+SubTitle.Size = UDim2.fromOffset(350, 20)
+SubTitle.Font = Enum.Font.Gotham
+SubTitle.Text = "Tower Defense Simulator"
+SubTitle.TextSize = 11
+SubTitle.TextColor3 = Color3.fromRGB(125, 125, 140)
+SubTitle.TextXAlignment = Enum.TextXAlignment.Left
+SubTitle.Parent = Header
+
+--==================================================
+-- Sidebar
+--==================================================
+
+local Sidebar = Instance.new("Frame")
+Sidebar.Size = UDim2.new(0, 145, 1, -70)
+Sidebar.Position = UDim2.fromOffset(0, 70)
+Sidebar.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
+Sidebar.BorderSizePixel = 0
+Sidebar.Parent = Window
+
+local SidebarPadding = Instance.new("UIPadding")
+SidebarPadding.PaddingTop = UDim.new(0, 18)
+SidebarPadding.PaddingLeft = UDim.new(0, 11)
+SidebarPadding.PaddingRight = UDim.new(0, 11)
+SidebarPadding.Parent = Sidebar
+
+local MainTab = Instance.new("TextButton")
+MainTab.Size = UDim2.new(1, 0, 0, 42)
+MainTab.BackgroundColor3 = Color3.fromRGB(48, 34, 69)
+MainTab.BorderSizePixel = 0
+MainTab.AutoButtonColor = false
+MainTab.Font = Enum.Font.GothamSemibold
+MainTab.Text = "   Main"
+MainTab.TextSize = 13
+MainTab.TextColor3 = Color3.fromRGB(205, 175, 255)
+MainTab.TextXAlignment = Enum.TextXAlignment.Left
+MainTab.Parent = Sidebar
+
+Instance.new("UICorner", MainTab).CornerRadius = UDim.new(0, 7)
+
+--==================================================
+-- Content
+--==================================================
+
+local Content = Instance.new("Frame")
+Content.Size = UDim2.new(1, -145, 1, -70)
+Content.Position = UDim2.fromOffset(145, 70)
+Content.BackgroundTransparency = 1
+Content.Parent = Window
+
+local Padding = Instance.new("UIPadding")
+Padding.PaddingTop = UDim.new(0, 21)
+Padding.PaddingLeft = UDim.new(0, 24)
+Padding.PaddingRight = UDim.new(0, 24)
+Padding.Parent = Content
+
+local MainTitle = Instance.new("TextLabel")
+MainTitle.BackgroundTransparency = 1
+MainTitle.Size = UDim2.new(1, 0, 0, 28)
+MainTitle.Font = Enum.Font.GothamBold
+MainTitle.Text = "Main"
+MainTitle.TextSize = 18
+MainTitle.TextColor3 = Color3.fromRGB(235, 235, 242)
+MainTitle.TextXAlignment = Enum.TextXAlignment.Left
+MainTitle.Parent = Content
+
+local Description = Instance.new("TextLabel")
+Description.BackgroundTransparency = 1
+Description.Position = UDim2.fromOffset(0, 30)
+Description.Size = UDim2.new(1, 0, 0, 22)
+Description.Font = Enum.Font.Gotham
+Description.Text = "Automation"
+Description.TextSize = 11
+Description.TextColor3 = Color3.fromRGB(115, 115, 130)
+Description.TextXAlignment = Enum.TextXAlignment.Left
+Description.Parent = Content
+
+--==================================================
+-- Auto DJ Toggle
+--==================================================
+
+local AutoFrame = Instance.new("Frame")
+AutoFrame.Position = UDim2.fromOffset(0, 69)
+AutoFrame.Size = UDim2.new(1, 0, 0, 74)
+AutoFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+AutoFrame.BorderSizePixel = 0
+AutoFrame.Parent = Content
+
+Instance.new("UICorner", AutoFrame).CornerRadius = UDim.new(0, 8)
+
+local AutoTitle = Instance.new("TextLabel")
+AutoTitle.BackgroundTransparency = 1
+AutoTitle.Position = UDim2.fromOffset(16, 11)
+AutoTitle.Size = UDim2.new(1, -90, 0, 24)
+AutoTitle.Font = Enum.Font.GothamSemibold
+AutoTitle.Text = "Auto DJ"
+AutoTitle.TextSize = 14
+AutoTitle.TextColor3 = Color3.fromRGB(232, 232, 238)
+AutoTitle.TextXAlignment = Enum.TextXAlignment.Left
+AutoTitle.Parent = AutoFrame
+
+local AutoDescription = Instance.new("TextLabel")
+AutoDescription.BackgroundTransparency = 1
+AutoDescription.Position = UDim2.fromOffset(16, 38)
+AutoDescription.Size = UDim2.new(1, -90, 0, 19)
+AutoDescription.Font = Enum.Font.Gotham
+AutoDescription.Text = "Runs the Summer Castle strategy"
+AutoDescription.TextSize = 10
+AutoDescription.TextColor3 = Color3.fromRGB(115, 115, 130)
+AutoDescription.TextXAlignment = Enum.TextXAlignment.Left
+AutoDescription.Parent = AutoFrame
+
+local Toggle = Instance.new("TextButton")
+Toggle.Size = UDim2.fromOffset(48, 26)
+Toggle.Position = UDim2.new(1, -65, 0.5, -13)
+Toggle.BackgroundColor3 = Color3.fromRGB(55, 55, 67)
+Toggle.BorderSizePixel = 0
+Toggle.Text = ""
+Toggle.AutoButtonColor = false
+Toggle.Parent = AutoFrame
+
+Instance.new("UICorner", Toggle).CornerRadius = UDim.new(1, 0)
+
+local Knob = Instance.new("Frame")
+Knob.Size = UDim2.fromOffset(20, 20)
+Knob.Position = UDim2.fromOffset(3, 3)
+Knob.BackgroundColor3 = Color3.fromRGB(225, 225, 230)
+Knob.BorderSizePixel = 0
+Knob.Parent = Toggle
+
+Instance.new("UICorner", Knob).CornerRadius = UDim.new(1, 0)
+
+local Status = Instance.new("TextLabel")
+Status.BackgroundTransparency = 1
+Status.Position = UDim2.fromOffset(0, 158)
+Status.Size = UDim2.new(1, 0, 0, 22)
+Status.Font = Enum.Font.GothamMedium
+Status.Text = "Auto DJ: OFF"
+Status.TextSize = 11
+Status.TextColor3 = Color3.fromRGB(125, 125, 140)
+Status.TextXAlignment = Enum.TextXAlignment.Left
+Status.Parent = Content
+
+--==================================================
+-- Toggle Visual
+--==================================================
+
+local function SetToggleVisual(enabled)
+    if enabled then
+        TweenService:Create(
+            Toggle,
+            TweenInfo.new(0.18),
+            {BackgroundColor3 = Color3.fromRGB(105, 65, 165)}
+        ):Play()
+
+        TweenService:Create(
+            Knob,
+            TweenInfo.new(0.18),
+            {Position = UDim2.new(1, -23, 0, 3)}
+        ):Play()
+
+        Status.Text = "Auto DJ: ON"
+        Status.TextColor3 = Color3.fromRGB(190, 160, 245)
+    else
+        TweenService:Create(
+            Toggle,
+            TweenInfo.new(0.18),
+            {BackgroundColor3 = Color3.fromRGB(55, 55, 67)}
+        ):Play()
+
+        TweenService:Create(
+            Knob,
+            TweenInfo.new(0.18),
+            {Position = UDim2.fromOffset(3, 3)}
+        ):Play()
+
+        Status.Text = "Auto DJ: OFF"
+        Status.TextColor3 = Color3.fromRGB(125, 125, 140)
+    end
 end
 
-local function getXP()
-    return findAttribute({
-        "XP", "Xp", "xp",
-        "EXP", "Exp", "exp"
-    })
-end
+--==================================================
+-- FULL STRATEGY
+--==================================================
 
-local function getCoins()
-    return findAttribute({
-        "Coins", "coins",
-        "Coin", "coin"
-    })
-end
+local function RunAutoDJ()
 
-local function xpForNextLevel(level)
+    local TDS = loadstring(game:HttpGet(
+        "https://raw.githubusercontent.com/DuxiiT/auto-strat/refs/heads/main/Library.lua"
+    ))()
 
-    if level >= 50 then
-        local nextLevel = level + 1
+    if not getgenv().AutoDJ then return end
 
-        return 260 + (nextLevel * 1.5)
-    end
-
-    return 0
-end
-
-local function xpTo175(level, currentXP)
-
-    if not level or not currentXP then
-        return nil
-    end
-
-    if level >= TARGET_LEVEL then
-        return 0
-    end
-
-    if level < 50 then
-        warn("dumbass this estimator is intended for level 50+.")
-        return nil
-    end
-
-    local total = 0
-
-    local required = xpForNextLevel(level)
-
-    total += math.max(
-        required - currentXP,
-        0
+    TDS:Loadout(
+        "Hacker",
+        "Pyromancer",
+        "Minigunner",
+        "Gatling Gun",
+        "DJ Booth"
     )
 
-    -- Complete levels up through 174 -> 175
-    for currentLevel = level + 1,
-        TARGET_LEVEL - 1 do
+    if not getgenv().AutoDJ then return end
+    TDS:Mode("Fallen")
 
-        total += xpForNextLevel(currentLevel)
+    if not getgenv().AutoDJ then return end
+    TDS:GameInfo("Summer Castle", {})
 
-    end
+    if not getgenv().AutoDJ then return end
+    TDS:Place("Pyromancer", 8.567880630493164, 0.97013258934021, 26.52056884765625)
 
-    return total
+    if not getgenv().AutoDJ then return end
+    TDS:Ready()
+
+    if not getgenv().AutoDJ then return end
+    TDS:VoteSkip(1)
+
+    -- Wave 2
+    if not getgenv().AutoDJ then return end
+    TDS:Upgrade(1)
+    TDS:VoteSkip(2)
+
+    -- Wave 3
+    if not getgenv().AutoDJ then return end
+    TDS:Upgrade(1)
+
+    -- Wave 4
+    if not getgenv().AutoDJ then return end
+    TDS:VoteSkip(4)
+
+    -- Wave 5
+    if not getgenv().AutoDJ then return end
+    TDS:VoteSkip(5)
+
+    -- Wave 6
+    if not getgenv().AutoDJ then return end
+    TDS:VoteSkip(6)
+
+    -- Wave 8
+    if not getgenv().AutoDJ then return end
+    TDS:Place("Gatling Gun", 11.766450881958008, 4.220941066741943, 8.191070556640625)
+
+    -- Wave 9
+    if not getgenv().AutoDJ then return end
+    TDS:Upgrade(2)
+
+    -- Wave 11
+    if not getgenv().AutoDJ then return end
+    TDS:Upgrade(2)
+
+    -- Wave 12
+    if not getgenv().AutoDJ then return end
+    TDS:Place("DJ Booth", 12.737796783447266, 0.9329841136932373, 13.83956241607666)
+    TDS:Upgrade(3)
+    TDS:Upgrade(3)
+    TDS:SetOption(3, "Track", "Green")
+
+    -- Wave 15
+    if not getgenv().AutoDJ then return end
+    TDS:Upgrade(2)
+
+    -- Wave 16
+    if not getgenv().AutoDJ then return end
+    TDS:Upgrade(3)
+
+    -- Wave 19
+    if not getgenv().AutoDJ then return end
+    TDS:Upgrade(2)
+
+    -- Wave 20
+    if not getgenv().AutoDJ then return end
+    TDS:Upgrade(3)
+
+    -- Wave 23
+    if not getgenv().AutoDJ then return end
+    TDS:Upgrade(2)
+
+    -- Wave 25
+    if not getgenv().AutoDJ then return end
+    TDS:Upgrade(3)
+    TDS:SetOption(3, "Track", "Red")
+
+    TDS:Place("Minigunner", 17.291763305664062, 0.9498612880706787, 15.203551292419434)
+    TDS:Place("Minigunner", 17.018463134765625, 0.975548267364502, 18.779539108276367)
+    TDS:Place("Minigunner", 20.050334930419922, 0.9783899784088135, 17.139951705932617)
+
+    -- Wave 26
+    if not getgenv().AutoDJ then return end
+    TDS:Place("Minigunner", 17.662452697753906, 0.9812321662902832, 24.862096786499023)
+    TDS:Place("Minigunner", 20.428485870361328, 0.9691746234893799, 13.808820724487305)
+
+    -- Wave 27
+    if not getgenv().AutoDJ then return end
+    TDS:Upgrade(8)
+    TDS:Upgrade(8)
+    TDS:Upgrade(8)
+    TDS:Upgrade(6)
+    TDS:Upgrade(6)
+    TDS:Upgrade(6)
+    TDS:VoteSkip(27)
+
+    -- Wave 28
+    if not getgenv().AutoDJ then return end
+    TDS:Upgrade(4)
+    TDS:Upgrade(4)
+    TDS:Upgrade(4)
+    TDS:Upgrade(5)
+    TDS:Upgrade(5)
+
+    -- Wave 29
+    if not getgenv().AutoDJ then return end
+    TDS:Upgrade(5)
+    TDS:Upgrade(7)
+    TDS:Upgrade(7)
+    TDS:Upgrade(7)
+
+    -- Wave 30
+    if not getgenv().AutoDJ then return end
+    TDS:VoteSkip(30)
+
+    -- Wave 31
+    if not getgenv().AutoDJ then return end
+    TDS:Ability(2, "FPS", {enabled = true})
+    TDS:Upgrade(2)
+
+    -- Wave 32
+    if not getgenv().AutoDJ then return end
+    TDS:Upgrade(5)
+    TDS:Upgrade(7)
+    TDS:Upgrade(4)
+    TDS:Upgrade(6)
+
+    -- Wave 33
+    if not getgenv().AutoDJ then return end
+    TDS:Upgrade(8)
+
+    TDS:Place(
+        "Minigunner",
+        22.794689178466797,
+        0.9727168083190918,
+        15.654775619506836
+    )
+
+    TDS:Upgrade(9)
+    TDS:Upgrade(9)
+
+    -- Wave 34
+    if not getgenv().AutoDJ then return end
+    TDS:Upgrade(9)
+    TDS:Upgrade(9)
+
+    TDS:Place(
+        "Minigunner",
+        17.46279525756836,
+        0.9613692760467529,
+        12.056400299072266
+    )
+
+    TDS:Upgrade(10)
+    TDS:Upgrade(10)
+    TDS:Upgrade(10)
+    TDS:Upgrade(10)
+
+    -- Wave 35
+    if not getgenv().AutoDJ then return end
+    TDS:Place(
+        "Minigunner",
+        14.624942779541016,
+        0.9769942760467529,
+        24.74415397644043
+    )
+
+    -- Wave 36
+    if not getgenv().AutoDJ then return end
+    TDS:Upgrade(11)
+    TDS:Upgrade(11)
+    TDS:Upgrade(11)
+    TDS:Upgrade(11)
+
+    TDS:Place(
+        "Minigunner",
+        10.04244613647461,
+        0.966740608215332,
+        19.680002212524414
+    )
+
+    TDS:Upgrade(12)
+
+    -- Wave 37
+    if not getgenv().AutoDJ then return end
+    TDS:Upgrade(12)
+    TDS:Upgrade(12)
+    TDS:Upgrade(12)
+
+    TDS:Place(
+        "Hacker",
+        7.977514266967773,
+        0.9178638458251953,
+        11.672075271606445
+    )
+
+    TDS:Upgrade(13)
+    TDS:Upgrade(13)
+    TDS:Upgrade(13)
+    TDS:Upgrade(13)
+    TDS:Upgrade(13, 2)
+
+    TDS:Ability(13, "Hologram Tower", {
+        towerPosition = Vector3.new(
+            6.9611310958862305,
+            4.5450310707092285,
+            5.811224460601807
+        ),
+        towerToClone = 2
+    })
+
+    TDS:Place(
+        "Minigunner",
+        20.058944702148438,
+        0.9774966239929199,
+        10.28524112701416
+    )
+
+    -- Wave 38
+    if not getgenv().AutoDJ then return end
+    TDS:Upgrade(14)
+    TDS:Upgrade(14)
+    TDS:Upgrade(14)
+    TDS:Upgrade(14)
+
+    TDS:Place(
+        "Minigunner",
+        16.872753143310547,
+        0.9703261852264404,
+        8.602004051208496
+    )
+
+    TDS:Upgrade(15)
+    TDS:Upgrade(15)
+
+    -- Wave 39
+    if not getgenv().AutoDJ then return end
+    TDS:Upgrade(15)
+    TDS:Upgrade(15)
+
+    TDS:Place(
+        "Minigunner",
+        22.738521575927734,
+        0.9833798408508301,
+        11.69324016571045
+    )
+
+    TDS:Upgrade(16)
+    TDS:Upgrade(16)
+    TDS:Upgrade(16)
+    TDS:Upgrade(16)
+
+    TDS:VoteSkip(39)
+
+    -- Wave 40
+    if not getgenv().AutoDJ then return end
+
+    TDS:Ability(13, "Hologram Tower", {
+        towerPosition = Vector3.new(
+            7.696575164794922,
+            4.600515365600586,
+            5.604712009429932
+        ),
+        towerToClone = 2
+    })
+
+    TDS:Upgrade(1)
+    TDS:Upgrade(1)
+    TDS:Upgrade(1)
+
+    TDS:Place(
+        "Minigunner",
+        6.890604019165039,
+        0.9629635810852051,
+        20.342927932739258
+    )
+
+    TDS:Upgrade(17)
+    TDS:Upgrade(17)
+    TDS:Upgrade(17)
+    TDS:Upgrade(17)
+
+    TDS:Ability(13, "Hologram Tower", {
+        towerPosition = Vector3.new(
+            5.415221214294434,
+            4.71909761428833,
+            4.171282768249512
+        ),
+        towerToClone = 2
+    })
+
+    --==================================================
+    -- AUTO DJ
+    --==================================================
+
+    -- Your Auto DJ code:
+    TDS:Ability(3, "Drop The Beat", true)
 end
 
-local function formatTime(hours)
+--==================================================
+-- Toggle
+--==================================================
 
-    if hours <= 0 then
-        return "0m"
-    end
+local function SetAutoDJ(enabled)
 
-    local minutes = math.ceil(hours * 60)
+    getgenv().AutoDJ = enabled
 
-    local days = math.floor(minutes / 1440)
-    minutes %= 1440
+    if enabled then
 
-    local hoursPart = math.floor(minutes / 60)
-    local minutesPart = minutes % 60
+        if AutoDJ then
+            return
+        end
 
-    if days > 0 then
-        return string.format(
-            "%dd %dh %dm",
-            days,
-            hoursPart,
-            minutesPart
-        )
-    elseif hoursPart > 0 then
-        return string.format(
-            "%dh %dm",
-            hoursPart,
-            minutesPart
-        )
+        SetToggleVisual(true)
+
+        AutoDJ = task.spawn(function()
+
+            local success, err = pcall(function()
+                RunAutoDJ()
+            end)
+
+            AutoDJ = nil
+
+            if not success then
+                warn("[TDS Hub] Auto DJ error:", err)
+            end
+
+            if getgenv().AutoDJ then
+                getgenv().AutoDJ = false
+                SetToggleVisual(false)
+            end
+        end)
+
     else
-        return string.format(
-            "%dm",
-            minutesPart
-        )
+
+        SetToggleVisual(false)
+
+        if AutoDJ then
+            task.cancel(AutoDJ)
+            AutoDJ = nil
+        end
     end
 end
 
+Toggle.MouseButton1Click:Connect(function()
+    SetAutoDJ(not getgenv().AutoDJ)
+end)
 
-local function estimate()
+--==================================================
+-- Dragging
+--==================================================
 
-    local level = getLevel()
-    local xp = getXP()
-    local coins = getCoins()
+--==================================================
+-- Dragging - PC + Mobile
+--==================================================
 
-    print("")
-    print("========================================")
-    print("          TDS AUTO GATLING ESTIMATOR")
-    print("========================================")
+local UserInputService = game:GetService("UserInputService")
 
-    print("Current Level:", level or "NOT FOUND")
-    print("Current XP:", xp or "NOT FOUND")
-    print("Current Coins:", coins or "NOT FOUND")
+local dragging = false
+local dragStart
+local startPosition
+local dragInput
 
-    print("")
-    print("Effective XP/hour:", XP_PER_HOUR)
-    print("Effective Coins/hour:", COINS_PER_HOUR)
+local function updateDrag(input)
+    local delta = input.Position - dragStart
 
-
-    local coinETA
-
-    if coins then
-
-        local remaining =
-            math.max(
-                TARGET_COINS - coins,
-                0
-            )
-
-        local hours =
-            remaining / COINS_PER_HOUR
-
-        coinETA = hours
-
-        print("")
-        print("35,000 COINS")
-        print("Remaining:", remaining)
-        print("ETA:", formatTime(hours))
-
-    end
-    
-    local levelETA
-
-    if level and xp then
-
-        local remainingXP =
-            xpTo175(
-                level,
-                xp
-            )
-
-        if remainingXP then
-
-            local hours =
-                remainingXP / XP_PER_HOUR
-
-            levelETA = hours
-
-            print("")
-            print("----- LEVEL 175 -----")
-            print("Remaining XP:", math.floor(remainingXP))
-            print("XP/hour:", XP_PER_HOUR)
-            print("ETA:", formatTime(hours))
-
-        end
-    end
-
-
-    if coinETA and levelETA then
-
-        local overall =
-            math.max(
-                coinETA,
-                levelETA
-            )
-
-        print("")
-        print("----- OVERALL -----")
-        print(
-            "35K Coins:",
-            formatTime(coinETA)
-        )
-        print(
-            "Level 175:",
-            formatTime(levelETA)
-        )
-        print(
-            "Both goals:",
-            formatTime(overall)
-        )
-
-        if levelETA > coinETA then
-            print("level 175 takes longer")
-        elseif coinETA > levelETA then
-            print("35K coins takes longer")
-        elseif coinETA = levelETA then
-            print("both are gonna finish at the same time")
-        end
-    end
-
-    print("========================================")
+    Window.Position = UDim2.new(
+        startPosition.X.Scale,
+        startPosition.X.Offset + delta.X,
+        startPosition.Y.Scale,
+        startPosition.Y.Offset + delta.Y
+    )
 end
 
+Header.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
 
+        dragging = true
+        dragStart = input.Position
+        startPosition = Window.Position
 
-estimate()
-
-task.spawn(function()
-    while true do
-        task.wait(60)
-        estimate()
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
     end
 end)
+
+Header.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement
+        or input.UserInputType == Enum.UserInputType.Touch then
+
+        dragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        updateDrag(input)
+    end
+end)
+SetToggleVisual(false)
