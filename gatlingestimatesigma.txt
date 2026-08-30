@@ -1,0 +1,254 @@
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+local TARGET_LEVEL = 175
+local TARGET_COINS = 35000
+
+local BASE_XP_PER_HOUR = 100
+local VIP_PLUS_XP = 1.75
+
+local BASE_COINS_PER_HOUR = 2500
+local VIP_PLUS_COINS = 1.20
+
+local XP_PER_HOUR = BASE_XP_PER_HOUR * VIP_PLUS_XP
+local COINS_PER_HOUR = BASE_COINS_PER_HOUR * VIP_PLUS_COINS
+
+
+local function findAttribute(names)
+    for _, name in ipairs(names) do
+        local value = player:GetAttribute(name)
+        if typeof(value) == "number" then
+            return value
+        end
+    end
+
+    for _, object in ipairs(player:GetDescendants()) do
+        for _, name in ipairs(names) do
+            local value = object:GetAttribute(name)
+
+            if typeof(value) == "number" then
+                return value
+            end
+        end
+    end
+
+    return nil
+end
+
+local function getLevel()
+    return findAttribute({
+        "Level", "level",
+        "Lvl", "lvl"
+    })
+end
+
+local function getXP()
+    return findAttribute({
+        "XP", "Xp", "xp",
+        "EXP", "Exp", "exp"
+    })
+end
+
+local function getCoins()
+    return findAttribute({
+        "Coins", "coins",
+        "Coin", "coin"
+    })
+end
+
+local function xpForNextLevel(level)
+
+    if level >= 50 then
+        local nextLevel = level + 1
+
+        return 260 + (nextLevel * 1.5)
+    end
+
+    return 0
+end
+
+local function xpTo175(level, currentXP)
+
+    if not level or not currentXP then
+        return nil
+    end
+
+    if level >= TARGET_LEVEL then
+        return 0
+    end
+
+    if level < 50 then
+        warn("dumbass this estimator is intended for level 50+.")
+        return nil
+    end
+
+    local total = 0
+
+    local required = xpForNextLevel(level)
+
+    total += math.max(
+        required - currentXP,
+        0
+    )
+
+    -- Complete levels up through 174 -> 175
+    for currentLevel = level + 1,
+        TARGET_LEVEL - 1 do
+
+        total += xpForNextLevel(currentLevel)
+
+    end
+
+    return total
+end
+
+local function formatTime(hours)
+
+    if hours <= 0 then
+        return "0m"
+    end
+
+    local minutes = math.ceil(hours * 60)
+
+    local days = math.floor(minutes / 1440)
+    minutes %= 1440
+
+    local hoursPart = math.floor(minutes / 60)
+    local minutesPart = minutes % 60
+
+    if days > 0 then
+        return string.format(
+            "%dd %dh %dm",
+            days,
+            hoursPart,
+            minutesPart
+        )
+    elseif hoursPart > 0 then
+        return string.format(
+            "%dh %dm",
+            hoursPart,
+            minutesPart
+        )
+    else
+        return string.format(
+            "%dm",
+            minutesPart
+        )
+    end
+end
+
+
+local function estimate()
+
+    local level = getLevel()
+    local xp = getXP()
+    local coins = getCoins()
+
+    print("")
+    print("========================================")
+    print("          TDS AUTO GATLING ESTIMATOR")
+    print("========================================")
+
+    print("Current Level:", level or "NOT FOUND")
+    print("Current XP:", xp or "NOT FOUND")
+    print("Current Coins:", coins or "NOT FOUND")
+
+    print("")
+    print("Effective XP/hour:", XP_PER_HOUR)
+    print("Effective Coins/hour:", COINS_PER_HOUR)
+
+
+    local coinETA
+
+    if coins then
+
+        local remaining =
+            math.max(
+                TARGET_COINS - coins,
+                0
+            )
+
+        local hours =
+            remaining / COINS_PER_HOUR
+
+        coinETA = hours
+
+        print("")
+        print("35,000 COINS")
+        print("Remaining:", remaining)
+        print("ETA:", formatTime(hours))
+
+    end
+    
+    local levelETA
+
+    if level and xp then
+
+        local remainingXP =
+            xpTo175(
+                level,
+                xp
+            )
+
+        if remainingXP then
+
+            local hours =
+                remainingXP / XP_PER_HOUR
+
+            levelETA = hours
+
+            print("")
+            print("----- LEVEL 175 -----")
+            print("Remaining XP:", math.floor(remainingXP))
+            print("XP/hour:", XP_PER_HOUR)
+            print("ETA:", formatTime(hours))
+
+        end
+    end
+
+
+    if coinETA and levelETA then
+
+        local overall =
+            math.max(
+                coinETA,
+                levelETA
+            )
+
+        print("")
+        print("----- OVERALL -----")
+        print(
+            "35K Coins:",
+            formatTime(coinETA)
+        )
+        print(
+            "Level 175:",
+            formatTime(levelETA)
+        )
+        print(
+            "Both goals:",
+            formatTime(overall)
+        )
+
+        if levelETA > coinETA then
+            print("level 175 takes longer")
+        elseif coinETA > levelETA then
+            print("35K coins takes longer")
+        elseif coinETA = levelETA then
+            print("both are gonna finish at the same time")
+        end
+    end
+
+    print("========================================")
+end
+
+
+
+estimate()
+
+task.spawn(function()
+    while true do
+        task.wait(60)
+        estimate()
+    end
+end)
