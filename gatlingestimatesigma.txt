@@ -1,5 +1,4 @@
 --// TDS HUB
---// Main > Auto DJ
 
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
@@ -10,12 +9,8 @@ local Player = Players.LocalPlayer
 getgenv().AutoDJ = false
 local AutoDJ = nil
 
---==================================================
--- GUI
---==================================================
-
 local Gui = Instance.new("ScreenGui")
-Gui.Name = "TDSHub"
+Gui.Name = "TDS Hub"
 Gui.ResetOnSpawn = false
 Gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
@@ -28,7 +23,7 @@ if not Gui.Parent then
 end
 
 local Window = Instance.new("Frame")
-Window.Size = UDim2.fromOffset(620, 390)
+Window.Size = UDim2.fromOffset(540, 350)
 Window.Position = UDim2.new(0.5, -310, 0.5, -195)
 Window.BackgroundColor3 = Color3.fromRGB(18, 18, 25)
 Window.BorderSizePixel = 0
@@ -39,10 +34,6 @@ Instance.new("UICorner", Window).CornerRadius = UDim.new(0, 10)
 local Border = Instance.new("UIStroke", Window)
 Border.Color = Color3.fromRGB(47, 47, 62)
 Border.Thickness = 1
-
---==================================================
--- Header
---==================================================
 
 local Header = Instance.new("Frame")
 Header.Size = UDim2.new(1, 0, 0, 70)
@@ -74,9 +65,6 @@ SubTitle.TextColor3 = Color3.fromRGB(125, 125, 140)
 SubTitle.TextXAlignment = Enum.TextXAlignment.Left
 SubTitle.Parent = Header
 
---==================================================
--- Sidebar
---==================================================
 
 local Sidebar = Instance.new("Frame")
 Sidebar.Size = UDim2.new(0, 145, 1, -70)
@@ -105,9 +93,6 @@ MainTab.Parent = Sidebar
 
 Instance.new("UICorner", MainTab).CornerRadius = UDim.new(0, 7)
 
---==================================================
--- Content
---==================================================
 
 local Content = Instance.new("Frame")
 Content.Size = UDim2.new(1, -145, 1, -70)
@@ -142,9 +127,6 @@ Description.TextColor3 = Color3.fromRGB(115, 115, 130)
 Description.TextXAlignment = Enum.TextXAlignment.Left
 Description.Parent = Content
 
---==================================================
--- Auto DJ Toggle
---==================================================
 
 local AutoFrame = Instance.new("Frame")
 AutoFrame.Position = UDim2.fromOffset(0, 69)
@@ -208,10 +190,6 @@ Status.TextColor3 = Color3.fromRGB(125, 125, 140)
 Status.TextXAlignment = Enum.TextXAlignment.Left
 Status.Parent = Content
 
---==================================================
--- Toggle Visual
---==================================================
-
 local function SetToggleVisual(enabled)
     if enabled then
         TweenService:Create(
@@ -245,10 +223,6 @@ local function SetToggleVisual(enabled)
         Status.TextColor3 = Color3.fromRGB(125, 125, 140)
     end
 end
-
---==================================================
--- FULL STRATEGY
---==================================================
 
 local function RunAutoDJ()
 
@@ -560,17 +534,8 @@ local function RunAutoDJ()
         towerToClone = 2
     })
 
-    --==================================================
-    -- AUTO DJ
-    --==================================================
-
-    -- Your Auto DJ code:
     TDS:Ability(3, "Drop The Beat", true)
 end
-
---==================================================
--- Toggle
---==================================================
 
 local function SetAutoDJ(enabled)
 
@@ -616,14 +581,6 @@ end
 Toggle.MouseButton1Click:Connect(function()
     SetAutoDJ(not getgenv().AutoDJ)
 end)
-
---==================================================
--- Dragging
---==================================================
-
---==================================================
--- Dragging - PC + Mobile
---==================================================
 
 local UserInputService = game:GetService("UserInputService")
 
